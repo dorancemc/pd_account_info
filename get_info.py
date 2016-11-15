@@ -62,5 +62,52 @@ def list_users():
             offset += 100
     return output
 
+
+def list_escalation_policies():
+    """List all escalation policies in account"""
+
+    output = pd_get('/escalation_policies', {'limit': 100})
+    if output['more']:
+        offset = 100
+        r = {'more': True}
+        while r['more']:
+            r = pd_get(
+                '/escalation_policies',
+                {'limit': 100, 'offset': offset}
+            )
+            output['escalation_policies'] = (
+                output['escalation_policies'] + r['escalation_policies']
+            )
+            offset += 100
+    return output
+
+
+def list_schedules():
+    """List all schedules in account"""
+
+    output = pd_get('/schedules', {'limit': 100})
+    if output['more']:
+        offset = 100
+        r = {'more': True}
+        while r['more']:
+            r = pd_get('/schedules', {'limit': 100, 'offset': offset})
+            output['schedules'] = output['schedules'] + r['schedules']
+            offset += 100
+    return output
+
+
+def list_teams():
+    """List all teams in account"""
+
+    output = pd_get('/teams', {'limit': 100})
+    if output['more']:
+        offset = 100
+        r = {'more': True}
+        while r['more']:
+            r = pd_get('/teams', {'limit': 100, 'offset': offset})
+            output['teams'] = output['teams'] + r['teams']
+            offset += 100
+    return output
+
 if __name__ == '__main__':
-    print len(list_users()['users'])
+    print len(list_escalation_policies()['escalation_policies'])
