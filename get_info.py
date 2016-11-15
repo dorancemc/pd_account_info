@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # Copyright (c) 2016, PagerDuty, Inc. <info@pagerduty.com>
 # All rights reserved.
 #
@@ -25,15 +27,17 @@
 
 import requests
 
+ACCESS_TOKEN = 'gtp8FTSxyuNpiA_PYtv7'
 
-def pd_get(endpoint, access_token, payload=None):
+
+def pd_get(endpoint, payload=None):
     """Handle all PagerDuty GET requests"""
 
     url = 'https://api.pagerduty.com{endpoint}'.format(endpoint=endpoint)
     headers = {
         'Accept': 'application/vnd.pagerduty+json;version=2',
         'Content-type': 'application/json',
-        'Authorization': 'Token token={token}'.format(token=access_token)
+        'Authorization': 'Token token={token}'.format(token=ACCESS_TOKEN)
     }
     r = requests.get(url, params=payload, headers=headers)
     if r.status_code == 200:
@@ -43,3 +47,20 @@ def pd_get(endpoint, access_token, payload=None):
             'There was an issue with your GET request:\nStatus code: {code}\
             \nError: {error}'.format(code=r.status_code, error=r.text)
         )
+
+
+def list_users():
+    """List all users in the account"""
+
+    output = pd_get('/users', {'limit': 100})
+    if output['more']:
+        offset = 100
+        r = {'more': True}
+        while r['more']:
+            r = pd_get('/users', {'limit': 100, 'offset': offset})
+            output['users'] = output['users'] + r['users']
+            offset += 100
+    return output
+
+if __name__ == '__main__':
+    print len(list_users()['users'])
