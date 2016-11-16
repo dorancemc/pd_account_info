@@ -244,5 +244,19 @@ def parse_team_info(teams):
 def list_team_services(team_id):
     """List all services on a team"""
 
+    output = pd_get('/services', {'limit': 100, 'team_ids[]': [team_id]})
+    if output['more']:
+        offset = 100
+        r = {'more': True}
+        while r['more']:
+            r = pd_get('/services', {
+                'limit': 100,
+                'offset': offset,
+                'team_ids[]': [team_id]
+            })
+            output['services'] = output['services'] + r['services']
+            offset += 100
+    return output
+
 if __name__ == '__main__':
     print json.dumps(list_users('PWQ8081'))
