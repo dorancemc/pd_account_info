@@ -161,12 +161,26 @@ def list_schedules(team_id=None):
 def list_schedule_oncalls(schedule_id):
     """List the current on-calls for a schedule"""
 
-    # TODO: add pagination
-    return pd_get('/oncalls', {
+    output = pd_get('/oncalls', {
         'since': datetime.now().isoformat(),
         'until': (datetime.now() + timedelta(seconds=1)).isoformat(),
-        'schedule_ids[]': [schedule_id]
+        'schedule_ids[]': [schedule_id],
+        'limit': 100
     })
+    if output['more']:
+        offset = 100
+        r = {'more': True}
+        while r['more']:
+            r = pd_get('/oncalls', {
+                'since': datetime.now().isoformat(),
+                'until': (datetime.now() + timedelta(seconds=1)).isoformat(),
+                'schedule_ids[]': [schedule_id],
+                'limit': 100,
+                'offset': offset
+            })
+            output['oncalls'] = output['oncalls'] + r['oncalls']
+            offset += 100
+    return output
 
 
 def parse_schedule_info(schedules):
