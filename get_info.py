@@ -27,6 +27,7 @@
 
 import requests
 import json
+from datetime import datetime, timedelta
 
 ACCESS_TOKEN = 'gtp8FTSxyuNpiA_PYtv7'
 
@@ -58,14 +59,11 @@ def list_users():
         offset = 100
         r = {'more': True}
         while r['more']:
-            r = pd_get(
-                '/users',
-                {
+            r = pd_get('/users', {
                     'limit': 100,
                     'offset': offset,
                     'include[]': ['contact_methods']
-                }
-            )
+                })
             output['users'] = output['users'] + r['users']
             offset += 100
     return output
@@ -120,6 +118,17 @@ def list_escalation_policies():
     return output
 
 
+def parse_ep_info(escalation_policies):
+    """Parse relevant escalation policy info for reporting"""
+
+    output = []
+    for ep in escalation_policies:
+        output.append({
+            'name': ep['name'],
+            'rules': 'PLACEHOLDER'  # TODO: Update this to the escalaton rules
+        })
+
+
 def list_schedules():
     """List all schedules in account"""
 
@@ -132,6 +141,15 @@ def list_schedules():
             output['schedules'] = output['schedules'] + r['schedules']
             offset += 100
     return output
+
+
+def list_schedule_oncall(schedule_id):
+    """List the current user on-call for a schedule"""
+
+    return pd_get('/schedules/{id}/users'.format(id=schedule_id), {
+        'since': datetime.now().isoformat(),
+        'until': (datetime.now() + timedelta(seconds=1)).isoformat()
+    })
 
 
 def list_teams():
@@ -148,4 +166,4 @@ def list_teams():
     return output
 
 if __name__ == '__main__':
-    print json.dumps(parse_user_info(list_users()['users']))
+    print json.dumps(list_schedule_oncall('PW73MZF'))
