@@ -51,10 +51,14 @@ def pd_get(endpoint, payload=None):
         )
 
 
-def list_users():
+def list_users(team_id=None):
     """List all users in the account"""
 
-    output = pd_get('/users', {'limit': 100, 'include[]': ['contact_methods']})
+    output = pd_get('/users', {
+        'limit': 100,
+        'include[]': ['contact_methods'],
+        'team_ids[]': [team_id]
+    })
     if output['more']:
         offset = 100
         r = {'more': True}
@@ -62,7 +66,8 @@ def list_users():
             r = pd_get('/users', {
                     'limit': 100,
                     'offset': offset,
-                    'include[]': ['contact_methods']
+                    'include[]': ['contact_methods'],
+                    'team_ids[]': [team_id]
                 })
             output['users'] = output['users'] + r['users']
             offset += 100
@@ -99,17 +104,20 @@ def parse_user_info(users):
     return output
 
 
-def list_escalation_policies():
+def list_escalation_policies(team_id=None):
     """List all escalation policies in account"""
 
-    output = pd_get('/escalation_policies', {'limit': 100})
+    output = pd_get('/escalation_policies', {
+        'limit': 100,
+        'team_ids[]': [team_id]
+    })
     if output['more']:
         offset = 100
         r = {'more': True}
         while r['more']:
             r = pd_get(
                 '/escalation_policies',
-                {'limit': 100, 'offset': offset}
+                {'limit': 100, 'offset': offset, 'team_ids[]': [team_id]}
             )
             output['escalation_policies'] = (
                 output['escalation_policies'] + r['escalation_policies']
@@ -129,15 +137,22 @@ def parse_ep_info(escalation_policies):
         })
 
 
-def list_schedules():
+def list_schedules(team_id=None):
     """List all schedules in account"""
 
-    output = pd_get('/schedules', {'limit': 100})
+    output = pd_get('/schedules', {
+        'limit': 100,
+        'team_ids[]': [team_id]
+    })
     if output['more']:
         offset = 100
         r = {'more': True}
         while r['more']:
-            r = pd_get('/schedules', {'limit': 100, 'offset': offset})
+            r = pd_get('/schedules', {
+                'limit': 100,
+                'offset': offset,
+                'team_ids[]': [team_id]
+            })
             output['schedules'] = output['schedules'] + r['schedules']
             offset += 100
     return output
@@ -146,6 +161,7 @@ def list_schedules():
 def list_schedule_oncalls(schedule_id):
     """List the current on-calls for a schedule"""
 
+    # TODO: add pagination
     return pd_get('/oncalls', {
         'since': datetime.now().isoformat(),
         'until': (datetime.now() + timedelta(seconds=1)).isoformat(),
@@ -198,5 +214,21 @@ def list_teams():
             offset += 100
     return output
 
+
+def parse_team_info(teams):
+    """Parse relevant team info for reporting"""
+
+    output = []
+    for team in teams:
+        output.append({
+            'name': team['name'],
+            'id': team['id'],
+            'users': []
+        })
+
+
+def list_team_services(team_id):
+    """List all services on a team"""
+
 if __name__ == '__main__':
-    print json.dumps(parse_schedule_info(list_schedules()['schedules']))
+    print json.dumps(list_users('PWQ8081'))
