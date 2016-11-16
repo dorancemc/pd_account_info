@@ -233,12 +233,36 @@ def parse_team_info(teams):
     """Parse relevant team info for reporting"""
 
     output = []
-    for team in teams:
+    for i, team in enumerate(teams):
         output.append({
             'name': team['name'],
             'id': team['id'],
-            'users': []
+            'users': [],
+            'schedules': [],
+            'escalation_policies': [],
+            'services': []
         })
+        for user in list_users(team['id'])['users']:
+            output[i]['users'].append({
+                'name': user['name'],
+                'id': user['id']
+            })
+        for schedule in list_schedules(team['id'])['schedules']:
+            output[i]['schedules'].append({
+                'name': schedule['name'],
+                'id': schedule['id']
+            })
+        for ep in list_escalation_policies(team['id'])['escalation_policies']:
+            output[i]['escalation_policies'].append({
+                'name': ep['name'],
+                'id': ep['id']
+            })
+        for service in list_team_services(team['id'])['services']:
+            output[i]['services'].append({
+                'name': service['name'],
+                'id': service['id']
+            })
+    return output
 
 
 def list_team_services(team_id):
@@ -259,4 +283,4 @@ def list_team_services(team_id):
     return output
 
 if __name__ == '__main__':
-    print json.dumps(list_users('PWQ8081'))
+    print json.dumps(parse_team_info(list_teams()['teams']))
