@@ -143,13 +143,33 @@ def list_schedules():
     return output
 
 
-def list_schedule_oncall(schedule_id):
-    """List the current user on-call for a schedule"""
+def list_schedule_oncalls(schedule_id):
+    """List the current on-calls for a schedule"""
 
-    return pd_get('/schedules/{id}/users'.format(id=schedule_id), {
+    return pd_get('/oncalls', {
         'since': datetime.now().isoformat(),
-        'until': (datetime.now() + timedelta(seconds=1)).isoformat()
+        'until': (datetime.now() + timedelta(seconds=1)).isoformat(),
+        'schedule_ids[]': [schedule_id]
     })
+
+
+def parse_schedule_info(schedules):
+    """Parse relevant schedule info for reporting"""
+
+
+def parse_oncall_info(oncalls):
+    """Parse relevant on-call info for reporting"""
+
+    output = []
+    for oncall in oncalls:
+        output.append({
+            'user_name': oncall['user']['summary'],
+            'user_id': oncall['user']['id'],
+            'escalation_level': oncall['escalation_level'],
+            'start': oncall['start'],
+            'end': oncall['end']
+        })
+    return output
 
 
 def list_teams():
@@ -166,4 +186,4 @@ def list_teams():
     return output
 
 if __name__ == '__main__':
-    print json.dumps(list_schedule_oncall('PW73MZF'))
+    print json.dumps(parse_oncall_info(list_schedule_oncalls('PJGJ9RZ')['oncalls']))
