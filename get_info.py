@@ -156,6 +156,19 @@ def list_schedule_oncalls(schedule_id):
 def parse_schedule_info(schedules):
     """Parse relevant schedule info for reporting"""
 
+    output = []
+    for schedule in schedules:
+        output.append({
+            'name': schedule['name'],
+            'id': schedule['id'],
+            'description': schedule['description'],
+            'time_zone': schedule['time_zone'],
+            'oncalls': parse_oncall_info(
+                list_schedule_oncalls(schedule['id'])['oncalls']
+            )
+        })
+    return output
+
 
 def parse_oncall_info(oncalls):
     """Parse relevant on-call info for reporting"""
@@ -186,4 +199,4 @@ def list_teams():
     return output
 
 if __name__ == '__main__':
-    print json.dumps(parse_oncall_info(list_schedule_oncalls('PJGJ9RZ')['oncalls']))
+    print json.dumps(parse_schedule_info(list_schedules()['schedules']))
