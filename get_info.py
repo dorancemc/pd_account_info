@@ -26,6 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import requests
+import json
 
 ACCESS_TOKEN = 'gtp8FTSxyuNpiA_PYtv7'
 
@@ -52,14 +53,51 @@ def pd_get(endpoint, payload=None):
 def list_users():
     """List all users in the account"""
 
-    output = pd_get('/users', {'limit': 100})
+    output = pd_get('/users', {'limit': 100, 'include[]': ['contact_methods']})
     if output['more']:
         offset = 100
         r = {'more': True}
         while r['more']:
-            r = pd_get('/users', {'limit': 100, 'offset': offset})
+            r = pd_get(
+                '/users',
+                {
+                    'limit': 100,
+                    'offset': offset,
+                    'include[]': ['contact_methods']
+                }
+            )
             output['users'] = output['users'] + r['users']
             offset += 100
+    return output
+
+
+def parse_user_info(users):
+    """Parse relevant user info for reporting"""
+
+    output = []
+    for user in users:
+        contact_methods = []
+        for i, method in enumerate(user['contact_methods']):
+            contact_methods.append({
+                'label': method['label'],
+                'type': method['type'],
+                'id': method['id']
+            })
+            if method['type'] == 'push_notification_contact_method':
+                contact_methods[i]['address'] = 'N/A'
+            elif method['type'] == 'email_contact_method':
+                contact_methods[i]['address'] = method['address']
+            else:
+                contact_methods[i]['address'] = '{country}+{address}'.format(
+                    country=method['country_code'],
+                    address=method['address']
+                )
+        output.append({
+            'name': user['name'],
+            'email': user['email'],
+            'role': user['role'],
+            'contact_methods': contact_methods
+        })
     return output
 
 
@@ -110,4 +148,4 @@ def list_teams():
     return output
 
 if __name__ == '__main__':
-    print len(list_escalation_policies()['escalation_policies'])
+    print json.dumps(parse_user_info(list_users()['users']))
