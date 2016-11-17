@@ -28,6 +28,7 @@
 import requests
 import json
 from datetime import datetime, timedelta
+import csv
 
 ACCESS_TOKEN = 'gtp8FTSxyuNpiA_PYtv7'
 
@@ -96,11 +97,40 @@ def parse_user_info(users):
                 )
         output.append({
             'name': user['name'],
+            'id': user['id'],
             'email': user['email'],
             'role': user['role'],
             'contact_methods': contact_methods
         })
     return output
+
+
+def write_user_csv(user_data):
+    """Create user CSV from user data"""
+
+    with open('user_data_{timestamp}.csv'.format(
+        timestamp=datetime.now().isoformat()
+    ), 'w') as csvfile:
+        fieldnames = [
+            'id', 'name', 'email', 'role', 'contact_method_id',
+            'contact_method_type', 'contact_method_label',
+            'contact_method_address'
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for user in user_data:
+            for method in user['contact_methods']:
+                writer.writerow({
+                    'id': user['id'],
+                    'name': user['name'],
+                    'email': user['email'],
+                    'role': user['role'],
+                    'contact_method_id': method['id'],
+                    'contact_method_type': method['type'],
+                    'contact_method_label': method['label'],
+                    'contact_method_address': method['address']
+                })
+    return "CSV created"
 
 
 def list_escalation_policies(team_id=None):
@@ -301,4 +331,4 @@ def list_team_services(team_id):
     return output
 
 if __name__ == '__main__':
-    print json.dumps(parse_ep_info(list_escalation_policies()['escalation_policies']))
+    print json.dumps(write_user_csv(parse_user_info(list_users()['users'])))
