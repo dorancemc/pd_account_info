@@ -45,10 +45,9 @@ def pd_get(endpoint, payload=None):
     if r.status_code == 200:
         return r.json()
     else:
-        raise Exception(
-            'There was an issue with your GET request:\nStatus code: {code}\
-            \nError: {error}'.format(code=r.status_code, error=r.text)
-        )
+        raise Exception('GET request failed with status {code}'.format(
+            code=r.status_code
+        ))
 
 
 def list_users(team_id=None):
@@ -131,10 +130,29 @@ def parse_ep_info(escalation_policies):
 
     output = []
     for ep in escalation_policies:
+        rules = []
+        for rule in ep['escalation_rules']:
+            targets = []
+            for target in rule['targets']:
+                if target['type'] in ['user', 'user_reference']:
+                    target_type = 'user'
+                else:
+                    target_type = 'schedule'
+                targets.append({
+                    'id': target['id'],
+                    'type': target_type,
+                    'name': target['summary']
+                })
+            rules.append({
+                'escalation_delay': rule['escalation_delay_in_minutes'],
+                'id': rule['id'],
+                'targets': targets
+            })
         output.append({
             'name': ep['name'],
-            'rules': 'PLACEHOLDER'  # TODO: Update this to the escalaton rules
+            'rules': rules
         })
+    return output
 
 
 def list_schedules(team_id=None):
@@ -283,4 +301,4 @@ def list_team_services(team_id):
     return output
 
 if __name__ == '__main__':
-    print json.dumps(parse_team_info(list_teams()['teams']))
+    print json.dumps(parse_ep_info(list_escalation_policies()['escalation_policies']))
