@@ -80,6 +80,13 @@ def parse_user_info(users):
     output = []
     for user in users:
         contact_methods = []
+        if len(user['contact_methods']) == 0:
+            contact_methods = [{
+                'id': None,
+                'type': None,
+                'label': None,
+                'address': None
+            }]
         for i, method in enumerate(user['contact_methods']):
             contact_methods.append({
                 'label': method['label'],
@@ -106,7 +113,7 @@ def parse_user_info(users):
 
 
 def write_user_csv(user_data):
-    """Create user CSV from user data"""
+    """Create CSV from user data"""
 
     with open('user_data_{timestamp}.csv'.format(
         timestamp=datetime.now().isoformat()
@@ -166,6 +173,16 @@ def parse_ep_info(escalation_policies):
     output = []
     for ep in escalation_policies:
         rules = []
+        if len(ep['escalation_rules']) == 0:
+            rules = [{
+                'id': None,
+                'escalation_delay': None,
+                'targets': [{
+                    'id': None,
+                    'type': None,
+                    'name': None
+                }]
+            }]
         for rule in ep['escalation_rules']:
             targets = []
             for target in rule['targets']:
@@ -192,7 +209,7 @@ def parse_ep_info(escalation_policies):
 
 
 def write_escalation_policy_csv(ep_data):
-    """Create user CSV from escalation policy data"""
+    """Create CSV from escalation policy data"""
 
     with open('escalation_policy_data_{timestamp}.csv'.format(
         timestamp=datetime.now().isoformat()
@@ -290,6 +307,14 @@ def parse_oncall_info(oncalls):
     """Parse relevant on-call info for reporting"""
 
     output = []
+    if len(oncalls) == 0:
+        output = [{
+            'user_name': None,
+            'user_id': None,
+            'escalation_level': None,
+            'start': None,
+            'end': None
+        }]
     for oncall in oncalls:
         output.append({
             'user_name': oncall['user']['summary'],
@@ -299,6 +324,41 @@ def parse_oncall_info(oncalls):
             'end': oncall['end']
         })
     return output
+
+
+def write_schedule_csv(schedule_data):
+    """Create CSV from schedule data"""
+
+    with open('schedule_data_{timestamp}.csv'.format(
+        timestamp=datetime.now().isoformat()
+    ), 'w') as csvfile:
+        fieldnames = [
+            'id',
+            'name',
+            'description',
+            'time_zone',
+            'oncall_id',
+            'oncall_name',
+            'oncall_escalation_level',
+            'oncall_shift_start',
+            'oncall_shift_end'
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for schedule in schedule_data:
+            for oncall in schedule['oncalls']:
+                writer.writerow({
+                    'id': schedule['id'],
+                    'name': schedule['name'],
+                    'description': schedule['description'],
+                    'time_zone': schedule['time_zone'],
+                    'oncall_id': oncall['user_id'],
+                    'oncall_name': oncall['user_name'],
+                    'oncall_escalation_level': oncall['escalation_level'],
+                    'oncall_shift_start': oncall['start'],
+                    'oncall_shift_end': oncall['end']
+                })
+    return "CSV created"
 
 
 def list_teams():
@@ -328,22 +388,48 @@ def parse_team_info(teams):
             'escalation_policies': [],
             'services': []
         })
-        for user in list_users(team['id'])['users']:
+        users = list_users(team['id'])['users']
+        if len(users) == 0:
+            output[i]['users'] = [{
+                'id': None,
+                'name': None
+            }]
+        for user in users:
             output[i]['users'].append({
                 'name': user['name'],
                 'id': user['id']
             })
-        for schedule in list_schedules(team['id'])['schedules']:
+        schedules = list_schedules(team['id'])['schedules']
+        if len(schedules) == 0:
+            output[i]['schedules'] = [{
+                'id': None,
+                'name': None
+            }]
+        for schedule in schedules:
             output[i]['schedules'].append({
                 'name': schedule['name'],
                 'id': schedule['id']
             })
-        for ep in list_escalation_policies(team['id'])['escalation_policies']:
+        escalation_policies = list_escalation_policies(
+            team['id']
+        )['escalation_policies']
+        if len(escalation_policies) == 0:
+            output[i]['escalation_policies'] = [{
+                'id': None,
+                'name': None
+            }]
+        for ep in escalation_policies:
             output[i]['escalation_policies'].append({
                 'name': ep['name'],
                 'id': ep['id']
             })
-        for service in list_team_services(team['id'])['services']:
+        services = list_team_services(team['id'])['services']
+        if len(services) == 0:
+            output[i]['services'] = [{
+                'id': None,
+                'name': None
+            }]
+        for service in services:
             output[i]['services'].append({
                 'name': service['name'],
                 'id': service['id']
@@ -369,4 +455,4 @@ def list_team_services(team_id):
     return output
 
 if __name__ == '__main__':
-    print json.dumps(parse_schedule_info(list_schedules()['schedules']))
+    print json.dumps(write_schedule_csv(parse_schedule_info(list_schedules()['schedules'])))
