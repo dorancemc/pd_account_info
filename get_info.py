@@ -26,11 +26,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import requests
-import json
 from datetime import datetime, timedelta
 import csv
 
-ACCESS_TOKEN = 'gtp8FTSxyuNpiA_PYtv7'
+ACCESS_TOKEN = 'ENTER_API_TOKEN_HERE'  # Should be a v2 token, can be read only
 
 
 def pd_get(endpoint, payload=None):
@@ -531,4 +530,10 @@ def write_team_csv(team_data):
     return "CSV created"
 
 if __name__ == '__main__':
-    print json.dumps(write_team_csv(parse_team_info(list_teams()['teams'])))
+    write_user_csv(parse_user_info(list_users()['users']))
+    write_escalation_policy_csv(parse_ep_info(
+        list_escalation_policies()['escalation_policies']
+    ))
+    write_schedule_csv(parse_schedule_info(list_schedules()['schedules']))
+    write_team_csv(parse_team_info(list_teams()['teams']))
+    print "Data has finished exporting"
