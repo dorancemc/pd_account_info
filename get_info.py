@@ -112,8 +112,13 @@ def write_user_csv(user_data):
         timestamp=datetime.now().isoformat()
     ), 'w') as csvfile:
         fieldnames = [
-            'id', 'name', 'email', 'role', 'contact_method_id',
-            'contact_method_type', 'contact_method_label',
+            'id',
+            'name',
+            'email',
+            'role',
+            'contact_method_id',
+            'contact_method_type',
+            'contact_method_label',
             'contact_method_address'
         ]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -180,9 +185,42 @@ def parse_ep_info(escalation_policies):
             })
         output.append({
             'name': ep['name'],
+            'id': ep['id'],
             'rules': rules
         })
     return output
+
+
+def write_escalation_policy_csv(ep_data):
+    """Create user CSV from escalation policy data"""
+
+    with open('escalation_policy_data_{timestamp}.csv'.format(
+        timestamp=datetime.now().isoformat()
+    ), 'w') as csvfile:
+        fieldnames = [
+            'id',
+            'name',
+            'escalation_rule_id',
+            'escalation_rule_delay',
+            'escalation_rule_target_id',
+            'escalation_rule_target_type',
+            'escalation_rule_target_name'
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for ep in ep_data:
+            for rule in ep['rules']:
+                for target in rule['targets']:
+                    writer.writerow({
+                        'id': ep['id'],
+                        'name': ep['name'],
+                        'escalation_rule_id': rule['id'],
+                        'escalation_rule_delay': rule['escalation_delay'],
+                        'escalation_rule_target_id': target['id'],
+                        'escalation_rule_target_type': target['type'],
+                        'escalation_rule_target_name': target['name']
+                    })
+    return "CSV created"
 
 
 def list_schedules(team_id=None):
@@ -331,4 +369,4 @@ def list_team_services(team_id):
     return output
 
 if __name__ == '__main__':
-    print json.dumps(write_user_csv(parse_user_info(list_users()['users'])))
+    print json.dumps(parse_schedule_info(list_schedules()['schedules']))
