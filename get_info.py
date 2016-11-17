@@ -454,5 +454,81 @@ def list_team_services(team_id):
             offset += 100
     return output
 
+
+def write_team_csv(team_data):
+    """Create CSV from team data"""
+
+    with open('team_data_{timestamp}.csv'.format(
+        timestamp=datetime.now().isoformat()
+    ), 'w') as csvfile:
+        fieldnames = [
+            'id',
+            'name',
+            'user_id',
+            'user_name',
+            'schedule_id',
+            'schedule_name',
+            'escalation_policy_id',
+            'escalation_policy_name',
+            'service_id',
+            'service_name'
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for team in team_data:
+            for user in team['users']:
+                writer.writerow({
+                    'id': team['id'],
+                    'name': team['name'],
+                    'user_id': user['id'],
+                    'user_name': user['name'],
+                    'schedule_id': None,
+                    'schedule_name': None,
+                    'escalation_policy_id': None,
+                    'escalation_policy_name': None,
+                    'service_id': None,
+                    'service_name': None
+                })
+            for schedule in team['schedules']:
+                writer.writerow({
+                    'id': team['id'],
+                    'name': team['name'],
+                    'user_id': None,
+                    'user_name': None,
+                    'schedule_id': schedule['id'],
+                    'schedule_name': schedule['name'],
+                    'escalation_policy_id': None,
+                    'escalation_policy_name': None,
+                    'service_id': None,
+                    'service_name': None
+                })
+            for ep in team['escalation_policies']:
+                writer.writerow({
+                    'id': team['id'],
+                    'name': team['name'],
+                    'user_id': None,
+                    'user_name': None,
+                    'schedule_id': None,
+                    'schedule_name': None,
+                    'escalation_policy_id': ep['id'],
+                    'escalation_policy_name': ep['name'],
+                    'service_id': None,
+                    'service_name': None
+                })
+            for service in team['services']:
+                writer.writerow({
+                    'id': team['id'],
+                    'name': team['name'],
+                    'user_id': None,
+                    'user_name': None,
+                    'schedule_id': None,
+                    'schedule_name': None,
+                    'escalation_policy_id': None,
+                    'escalation_policy_name': None,
+                    'service_id': service['id'],
+                    'service_name': service['name']
+                })
+    return "CSV created"
+
 if __name__ == '__main__':
-    print json.dumps(write_schedule_csv(parse_schedule_info(list_schedules()['schedules'])))
+    print json.dumps(write_team_csv(parse_team_info(list_teams()['teams'])))
