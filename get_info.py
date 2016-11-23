@@ -29,7 +29,7 @@ import requests
 from datetime import datetime, timedelta
 import csv
 
-ACCESS_TOKEN = 'ENTER_API_TOKEN_HERE'  # Should be a v2 token, can be read only
+ACCESS_TOKEN = 'ACCESS_TOKEN'  # Should be a v2 token, can be read only
 
 
 def pd_get(endpoint, payload=None):
@@ -133,13 +133,13 @@ def write_user_csv(user_data):
             for method in user['contact_methods']:
                 writer.writerow({
                     'id': user['id'],
-                    'name': user['name'],
-                    'email': user['email'],
+                    'name': user['name'].encode('utf-8'),
+                    'email': user['email'].encode('utf-8'),
                     'role': user['role'],
                     'contact_method_id': method['id'],
                     'contact_method_type': method['type'],
-                    'contact_method_label': method['label'],
-                    'contact_method_address': method['address']
+                    'contact_method_label': method['label'].encode('utf-8'),
+                    'contact_method_address': method['address'].encode('utf-8')
                 })
     return "CSV created"
 
@@ -388,22 +388,12 @@ def parse_team_info(teams):
             'services': []
         })
         users = list_users(team['id'])['users']
-        if len(users) == 0:
-            output[i]['users'] = [{
-                'id': None,
-                'name': None
-            }]
         for user in users:
             output[i]['users'].append({
                 'name': user['name'],
                 'id': user['id']
             })
         schedules = list_schedules(team['id'])['schedules']
-        if len(schedules) == 0:
-            output[i]['schedules'] = [{
-                'id': None,
-                'name': None
-            }]
         for schedule in schedules:
             output[i]['schedules'].append({
                 'name': schedule['name'],
@@ -412,22 +402,12 @@ def parse_team_info(teams):
         escalation_policies = list_escalation_policies(
             team['id']
         )['escalation_policies']
-        if len(escalation_policies) == 0:
-            output[i]['escalation_policies'] = [{
-                'id': None,
-                'name': None
-            }]
         for ep in escalation_policies:
             output[i]['escalation_policies'].append({
                 'name': ep['name'],
                 'id': ep['id']
             })
         services = list_team_services(team['id'])['services']
-        if len(services) == 0:
-            output[i]['services'] = [{
-                'id': None,
-                'name': None
-            }]
         for service in services:
             output[i]['services'].append({
                 'name': service['name'],
@@ -475,12 +455,14 @@ def write_team_csv(team_data):
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for team in team_data:
+            import pprint
+            pprint.pprint(team['services'])
             for user in team['users']:
                 writer.writerow({
                     'id': team['id'],
-                    'name': team['name'],
+                    'name': team['name'].encode('utf-8'),
                     'user_id': user['id'],
-                    'user_name': user['name'],
+                    'user_name': user['name'].encode('utf-8'),
                     'schedule_id': None,
                     'schedule_name': None,
                     'escalation_policy_id': None,
@@ -491,11 +473,11 @@ def write_team_csv(team_data):
             for schedule in team['schedules']:
                 writer.writerow({
                     'id': team['id'],
-                    'name': team['name'],
+                    'name': team['name'].encode('utf-8'),
                     'user_id': None,
                     'user_name': None,
                     'schedule_id': schedule['id'],
-                    'schedule_name': schedule['name'],
+                    'schedule_name': schedule['name'].encode('utf-8'),
                     'escalation_policy_id': None,
                     'escalation_policy_name': None,
                     'service_id': None,
@@ -504,20 +486,20 @@ def write_team_csv(team_data):
             for ep in team['escalation_policies']:
                 writer.writerow({
                     'id': team['id'],
-                    'name': team['name'],
+                    'name': team['name'].encode('utf-8'),
                     'user_id': None,
                     'user_name': None,
                     'schedule_id': None,
                     'schedule_name': None,
                     'escalation_policy_id': ep['id'],
-                    'escalation_policy_name': ep['name'],
+                    'escalation_policy_name': ep['name'].encode('utf-8'),
                     'service_id': None,
                     'service_name': None
                 })
             for service in team['services']:
                 writer.writerow({
                     'id': team['id'],
-                    'name': team['name'],
+                    'name': team['name'].encode('utf-8'),
                     'user_id': None,
                     'user_name': None,
                     'schedule_id': None,
@@ -525,7 +507,7 @@ def write_team_csv(team_data):
                     'escalation_policy_id': None,
                     'escalation_policy_name': None,
                     'service_id': service['id'],
-                    'service_name': service['name']
+                    'service_name': service['name'].encode('utf-8')
                 })
     return "CSV created"
 
