@@ -455,8 +455,6 @@ def write_team_csv(team_data):
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for team in team_data:
-            import pprint
-            pprint.pprint(team['services'])
             for user in team['users']:
                 writer.writerow({
                     'id': team['id'],
