@@ -407,30 +407,12 @@ def parse_team_info(teams):
                 'name': ep['name'],
                 'id': ep['id']
             })
-        services = list_team_services(team['id'])['services']
+        services = list_services(team['id'])['services']
         for service in services:
             output[i]['services'].append({
                 'name': service['name'],
                 'id': service['id']
             })
-    return output
-
-
-def list_team_services(team_id):
-    """List all services on a team"""
-
-    output = pd_get('/services', {'limit': 100, 'team_ids[]': [team_id]})
-    if output['more']:
-        offset = 100
-        r = {'more': True}
-        while r['more']:
-            r = pd_get('/services', {
-                'limit': 100,
-                'offset': offset,
-                'team_ids[]': [team_id]
-            })
-            output['services'] = output['services'] + r['services']
-            offset += 100
     return output
 
 
@@ -509,6 +491,67 @@ def write_team_csv(team_data):
                 })
     return "CSV created"
 
+
+def list_services(team_id=None):
+    """List all services"""
+
+    output = pd_get('/services', {'limit': 100, 'team_ids[]': [team_id]})
+    if output['more']:
+        offset = 100
+        r = {'more': True}
+        while r['more']:
+            r = pd_get('/services', {
+                'limit': 100,
+                'offset': offset,
+                'team_ids[]': [team_id]
+            })
+            output['services'] = output['services'] + r['services']
+            offset += 100
+    return output
+
+
+def parse_service_info(services):
+    """Parse relevant services info for reporting"""
+
+    output = []
+    for service in services:
+        output.append({
+            'id': service['id'],
+            'name': service['name'].encode('utf-8'),
+            'escalation_policy_id': service['escalation_policy']['id'],
+            'escalation_policy_name': service['escalation_policy']['summary'],
+            'alert_creation': service['alert_creation']
+        })
+    return output
+
+
+def write_service_csv(service_data):
+    """Create CSV from service data"""
+
+    with open('service_data_{timestamp}.csv'.format(
+        timestamp=datetime.now().isoformat()
+    ), 'w') as csvfile:
+        fieldnames = [
+            'id',
+            'name',
+            'escalation_policy_id',
+            'escalation_policy_name',
+            'alert_creation'
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for service in service_data:
+            writer.writerow({
+                'id': service['id'],
+                'name': service['name'],
+                'escalation_policy_id': service['escalation_policy_id'],
+                'escalation_policy_name': (
+                    service['escalation_policy_name'].encode('utf-8')
+                ),
+                'alert_creation': service['alert_creation']
+            })
+        return "CSV created"
+
 if __name__ == '__main__':
     write_user_csv(parse_user_info(list_users()['users']))
     write_escalation_policy_csv(parse_ep_info(
@@ -516,4 +559,5 @@ if __name__ == '__main__':
     ))
     write_schedule_csv(parse_schedule_info(list_schedules()['schedules']))
     write_team_csv(parse_team_info(list_teams()['teams']))
+    write_service_csv(parse_service_info(list_services()['services']))
     print "Data has finished exporting"
